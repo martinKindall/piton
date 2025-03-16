@@ -1,0 +1,36 @@
+package org.morsaprogramando.piton_language;
+
+import java_cup.runtime.*;
+
+parser code {:
+    public void report_error(String message, Object info) {
+        StringBuilder m = new StringBuilder("Error");
+
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
+
+            if (s.left >= 0) {
+                m.append(" in line " + (s.left + 1));
+                if (s.right >= 0)
+                    m.append(", column " + (s.right + 1));
+            }
+        }
+
+        m.append(" : " + message);
+        System.err.println(m);
+    }
+:}
+
+terminal HELLO;
+terminal BYE;
+/* No explicit EOF needed - CUP defines it automatically */
+
+non terminal expressionList;
+
+/* Grammar rules */
+start with expressionList;
+
+expressionList ::=
+    HELLO {: System.out.println("Parsed: HELLO"); :} |
+    expressionList HELLO {: System.out.println("Parsed: HELLO list"); :} |
+    expressionList BYE {: System.out.println("Parsed: BYE"); :} ;
