@@ -125,7 +125,19 @@ parser code {:
         }
     }
 
-    // Input node
+    class StringNode extends ASTNode {
+        private String sentence;
+
+        public StringNode(String sentence) {
+            this.sentence = sentence;
+        }
+
+        @Override
+        public Object evaluate() {
+            return sentence;
+        }
+    }
+
     class InputNode extends ASTNode {
         private String name;
 
@@ -135,13 +147,13 @@ parser code {:
 
         @Override
         public Object evaluate() {
+            System.out.print("> ");
             int value = scanner.nextInt();
             variables.put(name, value);
             return value;
         }
     }
 
-    // If-else node
     class IfElseNode extends ASTNode {
         private ASTNode condition;
         private ASTNode thenBranch;
@@ -164,6 +176,34 @@ parser code {:
                 return thenBranch.evaluate();
             } else if (elseBranch != null) {
                 return elseBranch.evaluate();
+            }
+
+            return null;
+        }
+    }
+
+    class WhileNode extends ASTNode {
+        private ASTNode condition;
+        private ASTNode thenStatement;
+
+        public WhileNode(ASTNode condition, ASTNode thenStatement) {
+            this.condition = condition;
+            this.thenStatement = thenStatement;
+        }
+
+        @Override
+        public Object evaluate() {
+            while (true) {
+                if (condition.evaluate() instanceof Boolean predicate) {
+                    if (predicate) {
+                        thenStatement.evaluate();
+                        continue;
+                    }
+
+                    break;
+                }
+
+                throw new RuntimeException("Condition must evaluate to a boolean");
             }
 
             return null;
@@ -250,6 +290,9 @@ terminal IF;
 terminal ELSE;
 terminal RIGHT_KEY;
 terminal LEFT_KEY;
+terminal WHILE;
+terminal PRINT;
+terminal WORDS;
 
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
@@ -262,14 +305,19 @@ non terminal else_statement;
 non terminal program;
 non terminal statement;
 non terminal statement_list;
+non terminal while_statement;
+non terminal print_statement;
 
 // precedence rules
+precedence nonassoc WORDS;
 precedence nonassoc NOTEQUAL, ISEQUAL;
 precedence left PLUS, MINUS;
 precedence left MULTIPLY, DIVIDE;
+precedence left EQUALS;
 precedence nonassoc LESS_THAN, LESS_THAN_EQ, GREATER_THAN, GREATER_THAN_EQ;
 precedence left IF;
 precedence left ELSE;
+precedence left WHILE;
 
 /* Grammar rules */
 start with program;
@@ -285,9 +333,13 @@ statement ::= var_assign:v TERM
           | read_input:r TERM
             {: RESULT = r; :}
           | calculation:c
-            {: RESULT = new PrintNode((ASTNode) c); :}
+            {: RESULT = c; :}
           | if_else:i
-            {: RESULT = i; :};
+            {: RESULT = i; :}
+          | while_statement:w
+            {: RESULT = w; :}
+          | print_statement:p TERM
+            {: RESULT = p; :};
 
 statement_list ::= statement:s {: RESULT = s; :} | statement:s1 statement_list:sL {:
         ASTNode[] statements = new ASTNode[2];
@@ -307,15 +359,30 @@ if_else ::= IF LEFT_PAR calculation:c RIGHT_PAR then_statement:t else_statement:
           | IF LEFT_PAR calculation:c RIGHT_PAR then_statement:t
           {: RESULT = new IfElseNode((ASTNode) c, (ASTNode) t, null); :};
 
-then_statement ::= LEFT_KEY statement:sl RIGHT_KEY
+then_statement ::= LEFT_KEY statement_list:sl RIGHT_KEY
                  {:
                     RESULT = sl;
                  :};
 
-else_statement ::= ELSE LEFT_KEY statement:sl RIGHT_KEY
+else_statement ::= ELSE LEFT_KEY statement_list:sl RIGHT_KEY
                  {:
                     RESULT = sl;
                  :};
+
+while_statement ::= WHILE LEFT_PAR calculation:c RIGHT_PAR then_statement:t
+                {:
+                    RESULT = new WhileNode((ASTNode) c, (ASTNode) t);
+                :};
+
+print_statement ::= PRINT LEFT_PAR WORDS:w RIGHT_PAR
+                {:
+                    String words = (String) w;
+                    RESULT = new PrintNode(new StringNode(words.replace("\"", "")));
+                :}
+                | PRINT LEFT_PAR calculation:c RIGHT_PAR
+                {:
+                    RESULT = new PrintNode((ASTNode) c);
+                :};
 
 calculation ::= LEFT_PAR calculation:c RIGHT_PAR
               {: RESULT = c; :};

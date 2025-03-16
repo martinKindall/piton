@@ -14,14 +14,13 @@ Integer = 0|[1-9]{Digit}*
 Name=[a-zA-Z][a-zA-Z0-9]*
 Input=read\(\)
 Boolean=true|false
+Words=\"[a-zA-Z0-9.,;!? ]*\"
 %%
 
 "if"        { return new Symbol(sym.IF); }
 "else"      { return new Symbol(sym.ELSE); }
-{Boolean}   { return new Symbol(sym.BOOLEAN, Boolean.parseBoolean(yytext())); }
-{Integer}   { return new Symbol(sym.INTEGER, Integer.parseInt(yytext())); }
-{Input}     { return new Symbol(sym.INPUT); }
-{Name}      { return new Symbol(sym.NAME, yytext()); }
+"while"     { return new Symbol(sym.WHILE); }
+"print"     { return new Symbol(sym.PRINT); }
 "="         { return new Symbol(sym.EQUALS); }
 ";"         { return new Symbol(sym.TERM); }
 "("         { return new Symbol(sym.LEFT_PAR); }
@@ -38,6 +37,11 @@ Boolean=true|false
 "=="         { return new Symbol(sym.ISEQUAL); }
 "{"         { return new Symbol(sym.LEFT_KEY); }
 "}"         { return new Symbol(sym.RIGHT_KEY); }
+{Boolean}   { return new Symbol(sym.BOOLEAN, Boolean.parseBoolean(yytext())); }
+{Integer}   { return new Symbol(sym.INTEGER, Integer.parseInt(yytext())); }
+{Input}     { return new Symbol(sym.INPUT); }
+{Name}      { return new Symbol(sym.NAME, yytext()); }
+{Words}      { return new Symbol(sym.WORDS, yytext()); }
 
 
 [ \t\r\n]  { /* Ignore whitespace */ }

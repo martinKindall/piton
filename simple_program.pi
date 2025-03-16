@@ -1,9 +1,20 @@
-a10 = 2 + 2;
-a20 = a10 * 10;
+print("Welcome to Fibonacci calculator. Enter a positive integer");
 
-if (a20 > 100) {
-    z1 = 10;
-} else {
-    z1 = 20;
+n = read();
+f1 = 1;
+
+if (n <= 1) {
+    print(n);
 }
-z1
+else {
+    f2 = 1;
+
+    while (n > 2) {
+        f = f1 + f2;
+        f1 = f2;
+        f2 = f;
+        n = n - 1;
+    }
+
+    print(f2);
+}
