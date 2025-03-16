@@ -34,3 +34,8 @@ It was written in Java using [JFlex](https://jflex.de/) and [CUP](https://www2.c
 
 - Function definition
 - Class definition
+
+#### References
+
+- CC3102 - Teoría de la Computación, Universidad de Chile.
+- https://andreil26.github.io/me/uniprojects/2019/06/21/lexer_parser.html
