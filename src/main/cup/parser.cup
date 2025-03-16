@@ -3,9 +3,11 @@ package org.morsaprogramando.piton_language;
 import java_cup.runtime.*;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Scanner;
 
 parser code {:
     private static Map<String, Integer> variables = new HashMap<>();
+    private static Scanner scanner = new Scanner(System.in);
 
     public void report_error(String message, Object info) {
         StringBuilder m = new StringBuilder("Error");
@@ -25,19 +27,22 @@ parser code {:
     }
 :}
 
-terminal EQUALS;
 terminal INTEGER;
 terminal NAME;
+terminal INPUT;
+terminal EQUALS;
 terminal TERM;
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
 non terminal expression;
 non terminal var_assign;
+non terminal read_input;
 
 /* Grammar rules */
 start with expression;
 
 expression ::= var_assign TERM |
+    read_input TERM |
     NAME:n {:
         String name = (String) n;
         if (!parser.variables.containsKey(name))
@@ -51,3 +56,8 @@ var_assign ::= NAME:n EQUALS INTEGER:i {:
     Integer value = (Integer) i;
     parser.variables.put(name, value);
  :};
+
+read_input ::= NAME:n EQUALS INPUT {:
+    String name = (String) n;
+    parser.variables.put(name, parser.scanner.nextInt());
+:};

@@ -12,10 +12,12 @@ import java_cup.runtime.*;
 Digit = [0-9]
 Integer = 0|[1-9]{Digit}*
 Name=[a-zA-Z][a-zA-Z0-9]*
+Input=read\(\)
 %%
 
 {Integer}   { return new Symbol(sym.INTEGER, Integer.parseInt(yytext())); }
 {Name}      { return new Symbol(sym.NAME, yytext()); }
+{Input}         { return new Symbol(sym.INPUT); }
 "="         { return new Symbol(sym.EQUALS); }
 ";"         { return new Symbol(sym.TERM); }
 
