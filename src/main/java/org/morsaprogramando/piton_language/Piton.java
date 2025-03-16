@@ -15,7 +15,7 @@ public class Piton {
         }
 
         if (!isInteractive) {
-            String filepath = "./simple_program.pi";
+            String filepath = "./src/main/resources/examples/simple_program.pi";
 
             try {
                 // Create a file reader for the input file
