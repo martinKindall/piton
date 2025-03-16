@@ -52,7 +52,6 @@ non terminal expression;
 non terminal var_assign;
 non terminal read_input;
 non terminal calculation;
-non terminal predicate;
 
 // precedence rules
 precedence nonassoc NOTEQUAL, ISEQUAL;
@@ -66,19 +65,10 @@ start with expression;
 
 expression ::= var_assign TERM |
     read_input TERM |
-    calculation:v {: System.out.println(v); :} |
-    predicate:v {: System.out.println(v); :} |
-    NAME:n {:
-        String name = (String) n;
-        if (!parser.variables.containsKey(name))
-            System.out.println("Unkown variable: " + name);
-        else
-            System.out.println(parser.variables.get(name));
-    :};
+    calculation:v {: System.out.println(v); :};
 
 var_assign ::= NAME:n EQUALS calculation:o {:
     String name = (String) n;
-    Object value = o;
     parser.variables.put(name, o);
  :};
 
@@ -116,3 +106,9 @@ calculation ::= INTEGER:i
 
 calculation ::= BOOLEAN:b
             {: RESULT = b; :};
+
+calculation ::= NAME:v {:
+        if (!parser.variables.containsKey(v)) throw new RuntimeException("Unkown variable: " + v);
+        RESULT = parser.variables.get(v);
+    :};
+
