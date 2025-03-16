@@ -21,16 +21,12 @@ parser code {:
     }
 :}
 
-terminal HELLO;
-terminal BYE;
+terminal INTEGER;
 /* No explicit EOF needed - CUP defines it automatically */
-
-non terminal expressionList;
+/* Non-terminal symbols */
+non terminal expression;
 
 /* Grammar rules */
-start with expressionList;
+start with expression;
 
-expressionList ::=
-    HELLO {: System.out.println("Parsed: HELLO"); :} |
-    expressionList HELLO {: System.out.println("Parsed: HELLO list"); :} |
-    expressionList BYE {: System.out.println("Parsed: BYE"); :} ;
+expression ::= INTEGER;

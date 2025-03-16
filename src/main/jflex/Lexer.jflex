@@ -9,10 +9,12 @@ import java_cup.runtime.*;
 %line
 %column
 
+Digit = [0-9]
+Integer = 0|[1-9]{Digit}*
 %%
 
-"hello"    { return new Symbol(sym.HELLO); }
-"bye"    { return new Symbol(sym.BYE); }
+{Integer}      { return new Symbol(sym.INTEGER); }
+
 [ \t\r\n]  { /* Ignore whitespace */ }
 
 /* Error fallback */
