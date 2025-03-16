@@ -17,6 +17,7 @@ Name=[a-zA-Z][a-zA-Z0-9]*
 {Integer}   { return new Symbol(sym.INTEGER); }
 {Name}      { return new Symbol(sym.NAME); }
 "="         { return new Symbol(sym.EQUALS); }
+";"         { return new Symbol(sym.TERM); }
 
 [ \t\r\n]  { /* Ignore whitespace */ }
 

@@ -24,11 +24,14 @@ parser code {:
 terminal EQUALS;
 terminal INTEGER;
 terminal NAME;
+terminal TERM;
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
 non terminal expression;
+non terminal var_assign;
 
 /* Grammar rules */
 start with expression;
 
-expression ::= NAME EQUALS INTEGER;
+expression ::= var_assign TERM;
+var_assign ::= NAME EQUALS INTEGER;
