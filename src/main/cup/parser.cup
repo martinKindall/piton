@@ -21,7 +21,9 @@ parser code {:
     }
 :}
 
+terminal EQUALS;
 terminal INTEGER;
+terminal NAME;
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
 non terminal expression;
@@ -29,4 +31,4 @@ non terminal expression;
 /* Grammar rules */
 start with expression;
 
-expression ::= INTEGER;
+expression ::= NAME EQUALS INTEGER;

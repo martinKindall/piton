@@ -11,9 +11,12 @@ import java_cup.runtime.*;
 
 Digit = [0-9]
 Integer = 0|[1-9]{Digit}*
+Name=[a-zA-Z][a-zA-Z0-9]*
 %%
 
-{Integer}      { return new Symbol(sym.INTEGER); }
+{Integer}   { return new Symbol(sym.INTEGER); }
+{Name}      { return new Symbol(sym.NAME); }
+"="         { return new Symbol(sym.EQUALS); }
 
 [ \t\r\n]  { /* Ignore whitespace */ }
 
