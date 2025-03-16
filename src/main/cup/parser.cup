@@ -45,6 +45,11 @@ terminal GREATER_THAN;
 terminal GREATER_THAN_EQ;
 terminal NOTEQUAL;
 terminal ISEQUAL;
+terminal IF;
+terminal ELSE;
+terminal THEN;
+terminal RIGHT_KEY;
+terminal LEFT_KEY;
 
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
@@ -52,18 +57,23 @@ non terminal expression;
 non terminal var_assign;
 non terminal read_input;
 non terminal calculation;
+non terminal if_else;
+non terminal then_statement;
+non terminal else_statement;
 
 // precedence rules
 precedence nonassoc NOTEQUAL, ISEQUAL;
 precedence left PLUS, MINUS;
 precedence left MULTIPLY, DIVIDE;
-precedence left LEFT_PAR, RIGHT_PAR;
 precedence nonassoc LESS_THAN, LESS_THAN_EQ, GREATER_THAN, GREATER_THAN_EQ;
+precedence left IF;
+precedence left ELSE;
 
 /* Grammar rules */
 start with expression;
 
-expression ::= var_assign TERM |
+expression ::= if_else |
+    var_assign TERM |
     read_input TERM |
     calculation:v {: System.out.println(v); :};
 
@@ -76,6 +86,16 @@ read_input ::= NAME:n EQUALS INPUT {:
     String name = (String) n;
     parser.variables.put(name, parser.scanner.nextInt());
 :};
+
+if_else ::= IF LEFT_PAR calculation:c RIGHT_PAR then_statement:t else_statement:e {:
+    boolean predicate = (boolean) c;
+    if (predicate) RESULT = t;
+    else RESULT = e;
+:};
+
+then_statement ::= LEFT_KEY expression RIGHT_KEY;
+
+else_statement ::= ELSE LEFT_KEY expression RIGHT_KEY;
 
 calculation ::= LEFT_PAR calculation:c RIGHT_PAR
               {: RESULT = c; :};

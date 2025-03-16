@@ -16,6 +16,8 @@ Input=read\(\)
 Boolean=true|false
 %%
 
+"if"        { return new Symbol(sym.IF); }
+"else"      { return new Symbol(sym.ELSE); }
 {Boolean}   { return new Symbol(sym.BOOLEAN, Boolean.parseBoolean(yytext())); }
 {Integer}   { return new Symbol(sym.INTEGER, Integer.parseInt(yytext())); }
 {Input}     { return new Symbol(sym.INPUT); }
@@ -34,6 +36,8 @@ Boolean=true|false
 ">="         { return new Symbol(sym.GREATER_THAN_EQ); }
 "!="         { return new Symbol(sym.NOTEQUAL); }
 "=="         { return new Symbol(sym.ISEQUAL); }
+"{"         { return new Symbol(sym.LEFT_KEY); }
+"}"         { return new Symbol(sym.RIGHT_KEY); }
 
 
 [ \t\r\n]  { /* Ignore whitespace */ }
