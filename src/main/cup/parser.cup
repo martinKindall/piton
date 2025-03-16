@@ -261,6 +261,7 @@ non terminal then_statement;
 non terminal else_statement;
 non terminal program;
 non terminal statement;
+non terminal statement_list;
 
 // precedence rules
 precedence nonassoc NOTEQUAL, ISEQUAL;
@@ -273,7 +274,7 @@ precedence left ELSE;
 /* Grammar rules */
 start with program;
 
-program ::= statement:e
+program ::= statement_list:e
             {:
                 RESULT = e;
                 parser.execute((ASTNode) e);
@@ -287,6 +288,13 @@ statement ::= var_assign:v TERM
             {: RESULT = new PrintNode((ASTNode) c); :}
           | if_else:i
             {: RESULT = i; :};
+
+statement_list ::= statement:s {: RESULT = s; :} | statement:s1 statement_list:sL {:
+        ASTNode[] statements = new ASTNode[2];
+        statements[0] = (ASTNode) s1;
+        statements[1] = (ASTNode) sL;
+        RESULT = new BlockNode(statements);
+:};
 
 var_assign ::= NAME:n EQUALS calculation:c
              {: RESULT = new AssignNode((String) n, (ASTNode) c); :};
