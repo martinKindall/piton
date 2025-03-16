@@ -20,6 +20,13 @@ Input=read\(\)
 {Input}         { return new Symbol(sym.INPUT); }
 "="         { return new Symbol(sym.EQUALS); }
 ";"         { return new Symbol(sym.TERM); }
+"("         { return new Symbol(sym.LEFT_PAR); }
+")"         { return new Symbol(sym.RIGHT_PAR); }
+"*"         { return new Symbol(sym.MULTIPLY); }
+"/"         { return new Symbol(sym.DIVIDE); }
+"+"         { return new Symbol(sym.PLUS); }
+"-"         { return new Symbol(sym.MINUS); }
+
 
 [ \t\r\n]  { /* Ignore whitespace */ }
 

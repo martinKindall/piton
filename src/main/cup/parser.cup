@@ -32,17 +32,31 @@ terminal NAME;
 terminal INPUT;
 terminal EQUALS;
 terminal TERM;
+terminal LEFT_PAR;
+terminal RIGHT_PAR;
+terminal MULTIPLY;
+terminal DIVIDE;
+terminal PLUS;
+terminal MINUS;
+
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
 non terminal expression;
 non terminal var_assign;
 non terminal read_input;
+non terminal calculation;
+
+// precedence rules
+precedence left PLUS, MINUS;
+precedence left MULTIPLY, DIVIDE;
+precedence left LEFT_PAR, RIGHT_PAR;
 
 /* Grammar rules */
 start with expression;
 
 expression ::= var_assign TERM |
     read_input TERM |
+    calculation |
     NAME:n {:
         String name = (String) n;
         if (!parser.variables.containsKey(name))
@@ -51,7 +65,7 @@ expression ::= var_assign TERM |
             System.out.println(parser.variables.get(name));
     :};
 
-var_assign ::= NAME:n EQUALS INTEGER:i {:
+var_assign ::= NAME:n EQUALS calculation:i {:
     String name = (String) n;
     Integer value = (Integer) i;
     parser.variables.put(name, value);
@@ -61,3 +75,18 @@ read_input ::= NAME:n EQUALS INPUT {:
     String name = (String) n;
     parser.variables.put(name, parser.scanner.nextInt());
 :};
+
+calculation ::= LEFT_PAR calculation:c RIGHT_PAR
+              {: RESULT = c; :};
+
+calculation ::= calculation:a MULTIPLY calculation:b
+              {: RESULT = (Integer) a * (Integer) b; :}
+              | calculation:a DIVIDE calculation:b
+              {: RESULT = (Integer) a / (Integer) b; :}
+              | calculation:a PLUS calculation:b
+              {: RESULT = (Integer) a + (Integer) b; :}
+              | calculation:a MINUS calculation:b
+              {: RESULT = (Integer) a - (Integer) b; :};
+
+calculation ::= INTEGER:i
+              {: RESULT = i; :};
