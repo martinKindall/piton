@@ -9,6 +9,201 @@ parser code {:
     private static Map<String, Object> variables = new HashMap<>();
     private static Scanner scanner = new Scanner(System.in);
 
+    // Base AST node
+    abstract class ASTNode {
+        public abstract Object evaluate();
+    }
+
+    // Number literal node
+    class NumberNode extends ASTNode {
+        private Integer value;
+
+        public NumberNode(Integer value) {
+            this.value = value;
+        }
+
+        @Override
+        public Object evaluate() {
+            return value;
+        }
+    }
+
+    // Boolean literal node
+    class BooleanNode extends ASTNode {
+        private Boolean value;
+
+        public BooleanNode(Boolean value) {
+            this.value = value;
+        }
+
+        @Override
+        public Object evaluate() {
+            return value;
+        }
+    }
+
+    // Variable reference node
+    class VariableNode extends ASTNode {
+        private String name;
+
+        public VariableNode(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Object evaluate() {
+            if (!variables.containsKey(name)) {
+                throw new RuntimeException("Unknown variable: " + name);
+            }
+            return variables.get(name);
+        }
+    }
+
+    // Binary operation node
+    class BinaryOpNode extends ASTNode {
+        private ASTNode left;
+        private String operator;
+        private ASTNode right;
+
+        public BinaryOpNode(ASTNode left, String operator, ASTNode right) {
+            this.left = left;
+            this.operator = operator;
+            this.right = right;
+        }
+
+        @Override
+        public Object evaluate() {
+            Object leftVal = left.evaluate();
+            Object rightVal = right.evaluate();
+
+            // For arithmetic operations
+            if (leftVal instanceof Integer && rightVal instanceof Integer) {
+                int leftInt = (Integer) leftVal;
+                int rightInt = (Integer) rightVal;
+
+                switch(operator) {
+                    case "+": return leftInt + rightInt;
+                    case "-": return leftInt - rightInt;
+                    case "*": return leftInt * rightInt;
+                    case "/": return leftInt / rightInt;
+                    case "<": return leftInt < rightInt;
+                    case "<=": return leftInt <= rightInt;
+                    case ">": return leftInt > rightInt;
+                    case ">=": return leftInt >= rightInt;
+                    case "==": return leftInt == rightInt;
+                    case "!=": return leftInt != rightInt;
+                }
+            }
+
+            // For boolean operations
+            if (operator.equals("==")) {
+                return leftVal.equals(rightVal);
+            } else if (operator.equals("!=")) {
+                return !leftVal.equals(rightVal);
+            }
+
+            throw new RuntimeException("Unsupported operation: " + operator + " for types " +
+                                      leftVal.getClass().getName() + " and " + rightVal.getClass().getName());
+        }
+    }
+
+    // Variable assignment node
+    class AssignNode extends ASTNode {
+        private String name;
+        private ASTNode valueNode;
+
+        public AssignNode(String name, ASTNode valueNode) {
+            this.name = name;
+            this.valueNode = valueNode;
+        }
+
+        @Override
+        public Object evaluate() {
+            Object value = valueNode.evaluate();
+            variables.put(name, value);
+            return value;
+        }
+    }
+
+    // Input node
+    class InputNode extends ASTNode {
+        private String name;
+
+        public InputNode(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Object evaluate() {
+            int value = scanner.nextInt();
+            variables.put(name, value);
+            return value;
+        }
+    }
+
+    // If-else node
+    class IfElseNode extends ASTNode {
+        private ASTNode condition;
+        private ASTNode thenBranch;
+        private ASTNode elseBranch;
+
+        public IfElseNode(ASTNode condition, ASTNode thenBranch, ASTNode elseBranch) {
+            this.condition = condition;
+            this.thenBranch = thenBranch;
+            this.elseBranch = elseBranch;
+        }
+
+        @Override
+        public Object evaluate() {
+            Object condValue = condition.evaluate();
+            if (!(condValue instanceof Boolean)) {
+                throw new RuntimeException("Condition must evaluate to a boolean");
+            }
+
+            if ((Boolean) condValue) {
+                return thenBranch.evaluate();
+            } else if (elseBranch != null) {
+                return elseBranch.evaluate();
+            }
+
+            return null;
+        }
+    }
+
+    // Block node (sequence of statements)
+    class BlockNode extends ASTNode {
+        private ASTNode[] statements;
+
+        public BlockNode(ASTNode[] statements) {
+            this.statements = statements;
+        }
+
+        @Override
+        public Object evaluate() {
+            Object result = null;
+            for (ASTNode statement : statements) {
+                result = statement.evaluate();
+            }
+            return result;
+        }
+    }
+
+    // Print node
+    class PrintNode extends ASTNode {
+        private ASTNode expression;
+
+        public PrintNode(ASTNode expression) {
+            this.expression = expression;
+        }
+
+        @Override
+        public Object evaluate() {
+            Object value = expression.evaluate();
+            System.out.println(value);
+            return value;
+        }
+    }
+
     public void report_error(String message, Object info) {
         StringBuilder m = new StringBuilder("Error");
 
@@ -24,6 +219,12 @@ parser code {:
 
         m.append(" : " + message);
         System.err.println(m);
+    }
+
+    public void execute(ASTNode root) {
+        if (root != null) {
+            root.evaluate();
+        }
     }
 :}
 
@@ -47,19 +248,19 @@ terminal NOTEQUAL;
 terminal ISEQUAL;
 terminal IF;
 terminal ELSE;
-terminal THEN;
 terminal RIGHT_KEY;
 terminal LEFT_KEY;
 
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
-non terminal expression;
 non terminal var_assign;
 non terminal read_input;
 non terminal calculation;
 non terminal if_else;
 non terminal then_statement;
 non terminal else_statement;
+non terminal program;
+non terminal statement;
 
 // precedence rules
 precedence nonassoc NOTEQUAL, ISEQUAL;
@@ -70,65 +271,73 @@ precedence left IF;
 precedence left ELSE;
 
 /* Grammar rules */
-start with expression;
+start with program;
 
-expression ::= if_else |
-    var_assign TERM |
-    read_input TERM |
-    calculation:v {: System.out.println(v); :};
+program ::= statement:e
+            {:
+                RESULT = e;
+                parser.execute((ASTNode) e);
+            :};
 
-var_assign ::= NAME:n EQUALS calculation:o {:
-    String name = (String) n;
-    parser.variables.put(name, o);
- :};
+statement ::= var_assign:v TERM
+            {: RESULT = v; :}
+          | read_input:r TERM
+            {: RESULT = r; :}
+          | calculation:c
+            {: RESULT = new PrintNode((ASTNode) c); :}
+          | if_else:i
+            {: RESULT = i; :};
 
-read_input ::= NAME:n EQUALS INPUT {:
-    String name = (String) n;
-    parser.variables.put(name, parser.scanner.nextInt());
-:};
+var_assign ::= NAME:n EQUALS calculation:c
+             {: RESULT = new AssignNode((String) n, (ASTNode) c); :};
 
-if_else ::= IF LEFT_PAR calculation:c RIGHT_PAR then_statement:t else_statement:e {:
-    boolean predicate = (boolean) c;
-    if (predicate) RESULT = t;
-    else RESULT = e;
-:};
+read_input ::= NAME:n EQUALS INPUT
+             {: RESULT = new InputNode((String) n); :};
 
-then_statement ::= LEFT_KEY expression RIGHT_KEY;
+if_else ::= IF LEFT_PAR calculation:c RIGHT_PAR then_statement:t else_statement:e
+          {: RESULT = new IfElseNode((ASTNode) c, (ASTNode) t, (ASTNode) e); :}
+          | IF LEFT_PAR calculation:c RIGHT_PAR then_statement:t
+          {: RESULT = new IfElseNode((ASTNode) c, (ASTNode) t, null); :};
 
-else_statement ::= ELSE LEFT_KEY expression RIGHT_KEY;
+then_statement ::= LEFT_KEY statement:sl RIGHT_KEY
+                 {:
+                    RESULT = sl;
+                 :};
+
+else_statement ::= ELSE LEFT_KEY statement:sl RIGHT_KEY
+                 {:
+                    RESULT = sl;
+                 :};
 
 calculation ::= LEFT_PAR calculation:c RIGHT_PAR
               {: RESULT = c; :};
 
 calculation ::= calculation:a MULTIPLY calculation:b
-              {: RESULT = (Integer) a * (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "*", (ASTNode) b); :}
               | calculation:a DIVIDE calculation:b
-              {: RESULT = (Integer) a / (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "/", (ASTNode) b); :}
               | calculation:a PLUS calculation:b
-              {: RESULT = (Integer) a + (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "+", (ASTNode) b); :}
               | calculation:a MINUS calculation:b
-              {: RESULT = (Integer) a - (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "-", (ASTNode) b); :}
               | calculation:a LESS_THAN calculation:b
-              {: RESULT = (Integer) a < (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "<", (ASTNode) b); :}
               | calculation:a LESS_THAN_EQ calculation:b
-              {: RESULT = (Integer) a <= (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "<=", (ASTNode) b); :}
               | calculation:a GREATER_THAN calculation:b
-              {: RESULT = (Integer) a > (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, ">", (ASTNode) b); :}
               | calculation:a GREATER_THAN_EQ calculation:b
-              {: RESULT = (Integer) a >= (Integer) b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, ">=", (ASTNode) b); :}
               | calculation:a NOTEQUAL calculation:b
-              {: RESULT = a != b; :}
+              {: RESULT = new BinaryOpNode((ASTNode) a, "!=", (ASTNode) b); :}
               | calculation:a ISEQUAL calculation:b
-              {: RESULT = a == b; :};
+              {: RESULT = new BinaryOpNode((ASTNode) a, "==", (ASTNode) b); :};
 
 calculation ::= INTEGER:i
-              {: RESULT = i; :};
+              {: RESULT = new NumberNode((Integer) i); :};
 
 calculation ::= BOOLEAN:b
-            {: RESULT = b; :};
+            {: RESULT = new BooleanNode((Boolean) b); :};
 
-calculation ::= NAME:v {:
-        if (!parser.variables.containsKey(v)) throw new RuntimeException("Unkown variable: " + v);
-        RESULT = parser.variables.get(v);
-    :};
-
+calculation ::= NAME:n
+            {: RESULT = new VariableNode((String) n); :};
