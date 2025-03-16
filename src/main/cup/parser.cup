@@ -1,8 +1,12 @@
 package org.morsaprogramando.piton_language;
 
 import java_cup.runtime.*;
+import java.util.Map;
+import java.util.HashMap;
 
 parser code {:
+    private static Map<String, Integer> variables = new HashMap<>();
+
     public void report_error(String message, Object info) {
         StringBuilder m = new StringBuilder("Error");
 
@@ -33,5 +37,17 @@ non terminal var_assign;
 /* Grammar rules */
 start with expression;
 
-expression ::= var_assign TERM;
-var_assign ::= NAME EQUALS INTEGER;
+expression ::= var_assign TERM |
+    NAME:n {:
+        String name = (String) n;
+        if (!parser.variables.containsKey(name))
+            System.out.println("Unkown variable: " + name);
+        else
+            System.out.println(parser.variables.get(name));
+    :};
+
+var_assign ::= NAME:n EQUALS INTEGER:i {:
+    String name = (String) n;
+    Integer value = (Integer) i;
+    parser.variables.put(name, value);
+ :};

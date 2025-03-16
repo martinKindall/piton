@@ -14,8 +14,8 @@ Integer = 0|[1-9]{Digit}*
 Name=[a-zA-Z][a-zA-Z0-9]*
 %%
 
-{Integer}   { return new Symbol(sym.INTEGER); }
-{Name}      { return new Symbol(sym.NAME); }
+{Integer}   { return new Symbol(sym.INTEGER, Integer.parseInt(yytext())); }
+{Name}      { return new Symbol(sym.NAME, yytext()); }
 "="         { return new Symbol(sym.EQUALS); }
 ";"         { return new Symbol(sym.TERM); }
 
