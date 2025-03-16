@@ -27,6 +27,7 @@ parser code {:
     }
 :}
 
+terminal BOOLEAN;
 terminal INTEGER;
 terminal NAME;
 terminal INPUT;
@@ -38,6 +39,12 @@ terminal MULTIPLY;
 terminal DIVIDE;
 terminal PLUS;
 terminal MINUS;
+terminal LESS_THAN;
+terminal LESS_THAN_EQ;
+terminal GREATER_THAN;
+terminal GREATER_THAN_EQ;
+terminal NOTEQUAL;
+terminal ISEQUAL;
 
 /* No explicit EOF needed - CUP defines it automatically */
 /* Non-terminal symbols */
@@ -45,6 +52,7 @@ non terminal expression;
 non terminal var_assign;
 non terminal read_input;
 non terminal calculation;
+non terminal predicate;
 
 // precedence rules
 precedence left PLUS, MINUS;
@@ -56,7 +64,8 @@ start with expression;
 
 expression ::= var_assign TERM |
     read_input TERM |
-    calculation |
+    calculation:v {: System.out.println(v); :} |
+    predicate:v {: System.out.println(v); :} |
     NAME:n {:
         String name = (String) n;
         if (!parser.variables.containsKey(name))
@@ -90,3 +99,22 @@ calculation ::= calculation:a MULTIPLY calculation:b
 
 calculation ::= INTEGER:i
               {: RESULT = i; :};
+
+predicate ::= LEFT_PAR predicate:c RIGHT_PAR
+              {: RESULT = c; :};
+
+predicate ::= calculation:a LESS_THAN calculation:b
+              {: RESULT = (Integer) a < (Integer) b; :}
+              | calculation:a LESS_THAN_EQ calculation:b
+              {: RESULT = (Integer) a <= (Integer) b; :}
+              | calculation:a GREATER_THAN calculation:b
+              {: RESULT = (Integer) a > (Integer) b; :}
+              | calculation:a GREATER_THAN_EQ calculation:b
+              {: RESULT = (Integer) a >= (Integer) b; :}
+              | calculation:a NOTEQUAL calculation:b
+              {: RESULT = (Integer) a != (Integer) b; :}
+              | calculation:a ISEQUAL calculation:b
+              {: RESULT = (Integer) a == (Integer) b; :};
+
+predicate ::= BOOLEAN:b
+            {: RESULT = b; :};
