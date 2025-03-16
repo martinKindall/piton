@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 parser code {:
-    private static Map<String, Integer> variables = new HashMap<>();
+    private static Map<String, Object> variables = new HashMap<>();
     private static Scanner scanner = new Scanner(System.in);
 
     public void report_error(String message, Object info) {
@@ -55,9 +55,11 @@ non terminal calculation;
 non terminal predicate;
 
 // precedence rules
+precedence nonassoc NOTEQUAL, ISEQUAL;
 precedence left PLUS, MINUS;
 precedence left MULTIPLY, DIVIDE;
 precedence left LEFT_PAR, RIGHT_PAR;
+precedence nonassoc LESS_THAN, LESS_THAN_EQ, GREATER_THAN, GREATER_THAN_EQ;
 
 /* Grammar rules */
 start with expression;
@@ -74,10 +76,10 @@ expression ::= var_assign TERM |
             System.out.println(parser.variables.get(name));
     :};
 
-var_assign ::= NAME:n EQUALS calculation:i {:
+var_assign ::= NAME:n EQUALS calculation:o {:
     String name = (String) n;
-    Integer value = (Integer) i;
-    parser.variables.put(name, value);
+    Object value = o;
+    parser.variables.put(name, o);
  :};
 
 read_input ::= NAME:n EQUALS INPUT {:
@@ -95,15 +97,8 @@ calculation ::= calculation:a MULTIPLY calculation:b
               | calculation:a PLUS calculation:b
               {: RESULT = (Integer) a + (Integer) b; :}
               | calculation:a MINUS calculation:b
-              {: RESULT = (Integer) a - (Integer) b; :};
-
-calculation ::= INTEGER:i
-              {: RESULT = i; :};
-
-predicate ::= LEFT_PAR predicate:c RIGHT_PAR
-              {: RESULT = c; :};
-
-predicate ::= calculation:a LESS_THAN calculation:b
+              {: RESULT = (Integer) a - (Integer) b; :}
+              | calculation:a LESS_THAN calculation:b
               {: RESULT = (Integer) a < (Integer) b; :}
               | calculation:a LESS_THAN_EQ calculation:b
               {: RESULT = (Integer) a <= (Integer) b; :}
@@ -112,9 +107,12 @@ predicate ::= calculation:a LESS_THAN calculation:b
               | calculation:a GREATER_THAN_EQ calculation:b
               {: RESULT = (Integer) a >= (Integer) b; :}
               | calculation:a NOTEQUAL calculation:b
-              {: RESULT = (Integer) a != (Integer) b; :}
+              {: RESULT = a != b; :}
               | calculation:a ISEQUAL calculation:b
-              {: RESULT = (Integer) a == (Integer) b; :};
+              {: RESULT = a == b; :};
 
-predicate ::= BOOLEAN:b
+calculation ::= INTEGER:i
+              {: RESULT = i; :};
+
+calculation ::= BOOLEAN:b
             {: RESULT = b; :};
